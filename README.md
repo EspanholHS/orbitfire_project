@@ -30,6 +30,10 @@ O projeto transforma dados públicos do Programa Queimadas do INPE em uma experi
 
 ## Como rodar localmente
 
+Não é necessario fazer nenhuma instalação local, pois o projeto esta deployado e rodando em sua totalidade em: https://orbitfire-project.vercel.app/
+
+Mas se por alguma razão ainda ouver interesse em rodar em um servidor local, segue as instruções:
+
 ### Pré-requisitos
 
 - Node.js instalado
