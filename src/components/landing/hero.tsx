@@ -11,7 +11,7 @@ const supportBadges = [
   },
   {
     icon: <Flame aria-hidden="true" size={14} />,
-    label: "Análise de 29/05/2026",
+    label: "Consumo dos dados via API OrbitFire",
   },
   {
     icon: <Satellite aria-hidden="true" size={14} />,
