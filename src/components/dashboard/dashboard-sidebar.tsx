@@ -28,15 +28,19 @@ const navItems: Array<{
 
 export function DashboardSidebar({
   activeView,
+  analysisDateLabel,
   mobileOpen,
   onClose,
   onViewChange,
+  sourceLabel,
   totalDetections,
 }: {
   activeView: DashboardView;
+  analysisDateLabel: string;
   mobileOpen: boolean;
   onClose: () => void;
   onViewChange: (view: DashboardView) => void;
+  sourceLabel: string;
   totalDetections: number;
 }) {
   return (
@@ -138,12 +142,10 @@ export function DashboardSidebar({
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/34">
             Fonte dos dados
           </p>
-          <p className="mt-4 text-sm font-medium text-orange-300">
-            Programa Queimadas
-          </p>
+          <p className="mt-4 text-sm font-medium text-orange-300">{sourceLabel}</p>
           <p className="text-sm text-orange-300">INPE</p>
           <p className="mt-5 text-xs text-white/50">Dataset:</p>
-          <p className="mt-1 text-sm text-white">29/05/2026</p>
+          <p className="mt-1 text-sm text-white">{analysisDateLabel}</p>
           <p className="mt-5 text-sm leading-6 text-white/62">
             {totalDetections.toLocaleString("pt-BR")} detecções processadas
           </p>

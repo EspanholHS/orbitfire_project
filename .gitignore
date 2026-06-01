@@ -31,6 +31,7 @@ yarn-error.log*
 .pnpm-debug.log*
 .orbitfire-*.png
 .orbitfire-*.log
+*.postman_collection.json
 
 # reference material
 lumina-video/
@@ -53,3 +54,5 @@ public/window.svg
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel

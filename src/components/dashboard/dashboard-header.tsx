@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { Bell, Home, Menu, Search } from "lucide-react";
+import { DataSourceBadge } from "@/components/dashboard/data-source-badge";
+import { DatePeriodSelector } from "@/components/dashboard/date-period-selector";
 import type { DashboardView } from "@/types/fire-focus";
+import type { AvailableDailyPeriod, DataSourceKind } from "@/types/orbitfire-api";
 
 const viewCopy: Record<DashboardView, { title: string; subtitle: string }> = {
   overview: {
@@ -28,20 +31,30 @@ const viewCopy: Record<DashboardView, { title: string; subtitle: string }> = {
 };
 
 export function DashboardHeader({
+  dataSource,
+  loadingDate,
   municipalities,
+  onDateChange,
   onMenuClick,
   onMunicipalitySearch,
+  periods,
+  selectedDate,
   view,
 }: {
+  dataSource: DataSourceKind;
+  loadingDate: string | null;
   municipalities: string[];
+  onDateChange: (date: string) => void;
   onMenuClick: () => void;
   onMunicipalitySearch: (municipality: string) => void;
+  periods: AvailableDailyPeriod[];
+  selectedDate: string;
   view: DashboardView;
 }) {
   const copy = viewCopy[view];
 
   return (
-    <header className="flex flex-col gap-5 border-b border-white/10 px-4 py-4 md:px-6 xl:flex-row xl:items-center xl:justify-between">
+    <header className="flex flex-col gap-5 border-b border-white/10 px-4 py-4 md:px-6 2xl:flex-row 2xl:items-center 2xl:justify-between">
       <div className="flex items-start gap-3">
         <button
           aria-label="Abrir navegação"
@@ -59,7 +72,7 @@ export function DashboardHeader({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 xl:flex-nowrap">
+      <div className="flex flex-wrap items-center gap-3">
         <Link
           className="orbitfire-back-link group inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-lg border border-white/10 bg-white/[0.035] px-4 text-xs font-medium text-white/62 transition hover:border-orange-300/25 hover:bg-orange-500/10 hover:text-white"
           href="/"
@@ -69,9 +82,15 @@ export function DashboardHeader({
         </Link>
         <BadgeText label="Dados reais" tone="orange" />
         <BadgeText label="INPE" />
-        <BadgeText label="29/05/2026" />
+        <DataSourceBadge source={dataSource} />
+        <DatePeriodSelector
+          loadingDate={loadingDate}
+          onDateChange={onDateChange}
+          periods={periods}
+          selectedDate={selectedDate}
+        />
 
-        <label className="relative min-w-[220px] flex-1 xl:w-64 xl:flex-none 2xl:w-72">
+        <label className="relative min-w-[220px] flex-1 xl:w-60 xl:flex-none 2xl:w-72">
           <span className="sr-only">Buscar município</span>
           <Search
             aria-hidden="true"

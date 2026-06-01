@@ -16,8 +16,10 @@ import {
   Sun,
 } from "lucide-react";
 import type { ComponentType } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { DashboardLoadingState } from "@/components/dashboard/dashboard-loading-state";
+import { DataCoverageBanner } from "@/components/dashboard/data-coverage-banner";
 import { OrbitalDashboardBackground } from "@/components/dashboard/orbital-dashboard-background";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { FocusDetailsDrawer } from "@/components/dashboard/focus-details-drawer";
@@ -49,6 +51,7 @@ import {
   precipitationSummary,
   riskDistributionByBiome,
 } from "@/lib/fire-metrics";
+import { useOrbitFireDataset } from "@/hooks/use-orbitfire-dataset";
 import type {
   DashboardFilters,
   DashboardView,
@@ -68,6 +71,7 @@ const viewStatus: Record<DashboardView, string> = {
 };
 
 export function DashboardShell({ data }: { data: FireDataPayload }) {
+  const dataset = useOrbitFireDataset(data);
   const [view, setView] = useState<DashboardView>("overview");
   const [filters, setFilters] = useState<DashboardFilters>(defaultFilters);
   const [mapMode, setMapMode] = useState<MapMode>("concentration");
@@ -77,12 +81,15 @@ export function DashboardShell({ data }: { data: FireDataPayload }) {
   const [motionStatus, setMotionStatus] = useState<string | null>(null);
   const [motionKey, setMotionKey] = useState(0);
   const statusTimeout = useRef<number | null>(null);
+  const previousDate = useRef(dataset.selectedDate);
+  const activeData = dataset.data;
+  const analysisDateLabel = formatDateLabel(dataset.selectedDate);
 
-  const showMotionStatus = (label: string) => {
+  const showMotionStatus = useCallback((label: string) => {
     setMotionStatus(label);
     if (statusTimeout.current) window.clearTimeout(statusTimeout.current);
     statusTimeout.current = window.setTimeout(() => setMotionStatus(null), 980);
-  };
+  }, []);
 
   useEffect(
     () => () => {
@@ -91,7 +98,17 @@ export function DashboardShell({ data }: { data: FireDataPayload }) {
     [],
   );
 
-  const records = data.records;
+  useEffect(() => {
+    if (previousDate.current === dataset.selectedDate) return;
+    previousDate.current = dataset.selectedDate;
+    setFilters(defaultFilters);
+    setSelectedFocus(null);
+    setSelectedMunicipalityId(null);
+    setMotionKey((current) => current + 1);
+    showMotionStatus("SINCRONIZANDO LEITURA ORBITAL");
+  }, [dataset.selectedDate, showMotionStatus]);
+
+  const records = activeData.records;
   const filteredRecords = useMemo(() => filterRecords(records, filters), [filters, records]);
   const metrics = useMemo(() => createMetrics(filteredRecords), [filteredRecords]);
   const municipalities = useMemo(
@@ -163,23 +180,30 @@ export function DashboardShell({ data }: { data: FireDataPayload }) {
   };
 
   return (
-    <main className="min-h-screen bg-[#070707] text-white">
+    <main className="min-h-screen overflow-x-hidden bg-[#070707] text-white">
       <OrbitalDashboardBackground intensified={Boolean(motionStatus)} view={view} />
       <MotionStatus label={motionStatus} />
 
       <div className="relative z-10 md:grid md:grid-cols-[280px_1fr]">
         <DashboardSidebar
           activeView={view}
+          analysisDateLabel={analysisDateLabel}
           mobileOpen={mobileSidebarOpen}
           onClose={() => setMobileSidebarOpen(false)}
           onViewChange={changeView}
-          totalDetections={data.summary.totalDetections}
+          sourceLabel={dataset.source === "api" ? "API OrbitFire" : "Programa Queimadas"}
+          totalDetections={activeData.summary.totalDetections}
         />
         <div className="min-w-0">
           <DashboardHeader
+            dataSource={dataset.source}
+            loadingDate={dataset.loadingDate}
             municipalities={allMunicipalities}
+            onDateChange={dataset.selectDate}
             onMenuClick={() => setMobileSidebarOpen(true)}
             onMunicipalitySearch={searchMunicipality}
+            periods={dataset.periods}
+            selectedDate={dataset.selectedDate}
             view={view}
           />
           <GlobalFilters
@@ -190,6 +214,11 @@ export function DashboardShell({ data }: { data: FireDataPayload }) {
             total={records.length}
           />
           <div className="p-4 md:p-6">
+            <DataCoverageBanner coverage={dataset.coverage} />
+            <DatasetErrorMessage
+              error={dataset.error}
+              onReferenceClick={dataset.resetToReference}
+            />
             {filteredRecords.length === 0 ? (
               <EmptyState onClear={() => updateFilters(defaultFilters)} />
             ) : (
@@ -214,6 +243,7 @@ export function DashboardShell({ data }: { data: FireDataPayload }) {
                   records={filteredRecords}
                   selectedFocus={selectedFocus}
                   selectedMunicipality={selectedMunicipality}
+                  analysisDateLabel={analysisDateLabel}
                   view={view}
                 />
               </div>
@@ -227,11 +257,16 @@ export function DashboardShell({ data }: { data: FireDataPayload }) {
         onClose={() => setSelectedFocus(null)}
         onInvestigateMunicipality={investigateFocusMunicipality}
       />
+      <DashboardLoadingState
+        dateLabel={dataset.loadingDate ? formatDateLabel(dataset.loadingDate) : analysisDateLabel}
+        visible={dataset.loading}
+      />
     </main>
   );
 }
 
 function DashboardViewContent({
+  analysisDateLabel,
   filters,
   mapMode,
   metrics,
@@ -250,6 +285,7 @@ function DashboardViewContent({
   selectedMunicipality,
   view,
 }: {
+  analysisDateLabel: string;
   filters: DashboardFilters;
   mapMode: MapMode;
   metrics: ReturnType<typeof createMetrics>;
@@ -323,6 +359,7 @@ function DashboardViewContent({
 
   return (
     <OverviewView
+      analysisDateLabel={analysisDateLabel}
       currentState={filters.estado}
       mapMode={mapMode}
       metrics={metrics}
@@ -352,6 +389,43 @@ function MotionStatus({ label }: { label: string | null }) {
   );
 }
 
+function DatasetErrorMessage({
+  error,
+  onReferenceClick,
+}: {
+  error: { date: string; message: string } | null;
+  onReferenceClick: () => void;
+}) {
+  if (!error) return null;
+
+  return (
+    <div className="mb-4 rounded-xl border border-red-300/18 bg-red-500/[0.055] p-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-red-200">
+            Falha na sincronizacao orbital
+          </p>
+          <p className="mt-1 text-sm leading-6 text-white/62">
+            {error.message} Data solicitada: {formatDateLabel(error.date)}.
+          </p>
+        </div>
+        <button
+          className="inline-flex items-center justify-center rounded-lg border border-orange-300/20 bg-orange-500/10 px-4 py-2 text-sm font-medium text-orange-100 transition hover:bg-orange-500/18"
+          onClick={onReferenceClick}
+          type="button"
+        >
+          Voltar para 29/05/2026
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function formatDateLabel(date: string) {
+  const [year, month, day] = date.split("-");
+  return `${day}/${month}/${year}`;
+}
+
 function sortMunicipalitiesByDetections(municipalities: MunicipalityAggregate[]) {
   return [...municipalities].sort(
     (a, b) =>
@@ -363,6 +437,7 @@ function sortMunicipalitiesByDetections(municipalities: MunicipalityAggregate[])
 }
 
 function OverviewView({
+  analysisDateLabel,
   currentState,
   mapMode,
   metrics,
@@ -377,6 +452,7 @@ function OverviewView({
   selectedFocus,
   selectedMunicipality,
 }: {
+  analysisDateLabel: string;
   currentState: string;
   mapMode: MapMode;
   metrics: ReturnType<typeof createMetrics>;
@@ -435,7 +511,7 @@ function OverviewView({
 
   return (
     <div className="space-y-5 orbitfire-dashboard-enter">
-      <MetricGrid metrics={metrics} />
+      <MetricGrid analysisDateLabel={analysisDateLabel} metrics={metrics} />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <OrbitMap
@@ -538,11 +614,17 @@ function OverviewView({
   );
 }
 
-function MetricGrid({ metrics }: { metrics: ReturnType<typeof createMetrics> }) {
+function MetricGrid({
+  analysisDateLabel,
+  metrics,
+}: {
+  analysisDateLabel: string;
+  metrics: ReturnType<typeof createMetrics>;
+}) {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
       <MetricCard
-        detail="29/05/2026"
+        detail={analysisDateLabel}
         icon={<Flame size={20} />}
         label="Focos detectados"
         value={formatInteger(metrics.total)}

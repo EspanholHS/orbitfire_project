@@ -17,7 +17,7 @@ const steps = [
     icon: Activity,
     label: "Etapa 2",
     title: "Organização e análise",
-    text: "O OrbitFire processa localização, bioma, risco de fogo, dias sem chuva, precipitação e potência radiativa observada.",
+    text: "O OrbitFire consome uma API própria desenvolvida pela equipe, que organiza localização, bioma, risco de fogo, dias sem chuva, precipitação e potência radiativa observada.",
   },
   {
     icon: RadioTower,
