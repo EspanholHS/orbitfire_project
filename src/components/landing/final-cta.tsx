@@ -5,9 +5,10 @@ import { Container } from "@/components/layout/container";
 import { DashboardTransitionLink } from "@/components/transitions/dashboard-transition-link";
 import { useInView } from "@/hooks/use-in-view";
 import { useState, useRef } from "react";
+import type { RefObject } from "react";
 
 export function FinalCta() {
-  const { ref, isInView } = useInView({ threshold: 0.1 });
+  const { ref, isInView } = useInView({ rootMargin: "-14% 0px -14% 0px", threshold: 0.1 });
   const buttonRef = useRef<HTMLDivElement>(null);
   const [buttonTransform, setButtonTransform] = useState("translate(0px, 0px)");
 
@@ -24,9 +25,12 @@ export function FinalCta() {
   };
 
   return (
-      <section className="relative pb-24 pt-12 md:pb-32" id="explorar" ref={ref}>
+      <section className="relative pb-24 pt-12 md:pb-32" id="explorar">
         <Container>
-          <div className="relative overflow-hidden rounded-lg border border-white/10 bg-black/55 p-8 shadow-[0_36px_140px_rgba(0,0,0,0.64)] backdrop-blur-xl md:p-12 lg:p-16">
+          <div
+            ref={ref as RefObject<HTMLDivElement>}
+            className="relative overflow-hidden rounded-lg border border-white/10 bg-black/55 p-8 shadow-[0_36px_140px_rgba(0,0,0,0.64)] backdrop-blur-xl md:p-12 lg:p-16"
+          >
             {/* Slowly pulsing radial glow */}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(249,115,22,0.22),transparent_52%)] animate-pulse [animation-duration:4s]" />
 

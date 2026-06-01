@@ -5,6 +5,7 @@ import { Container } from "@/components/layout/container";
 import { SectionHeading } from "@/components/landing/section-heading";
 import { useInView } from "@/hooks/use-in-view";
 import { useState, useEffect } from "react";
+import type { RefObject } from "react";
 
 const steps = [
   {
@@ -28,7 +29,7 @@ const steps = [
 ];
 
 export function ProcessSection() {
-  const { ref, isInView } = useInView({ threshold: 0.1 });
+  const { ref, isInView } = useInView({ rootMargin: "-14% 0px -14% 0px", threshold: 0.1 });
   const [activeStep, setActiveStep] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -44,7 +45,6 @@ export function ProcessSection() {
     <section
       className="relative border-y border-white/10 py-24 md:py-32"
       id="como-funciona"
-      ref={ref}
     >
       <Container>
         <SectionHeading
@@ -54,6 +54,7 @@ export function ProcessSection() {
         />
 
         <div 
+          ref={ref as RefObject<HTMLDivElement>}
           className={`relative mt-16 grid gap-5 lg:grid-cols-3 transition-all duration-1000 ${isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}

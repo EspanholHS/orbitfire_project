@@ -4,7 +4,7 @@ import { AlertTriangle, Layers3, MapPinned } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { SectionHeading } from "@/components/landing/section-heading";
 import { useInView } from "@/hooks/use-in-view";
-import { useState } from "react";
+import { useState, type RefObject } from "react";
 
 const problemCards = [
   {
@@ -69,14 +69,13 @@ const hotspotRings = [
 ];
 
 export function ProblemSection() {
-  const { ref, isInView } = useInView({ threshold: 0.1 });
+  const { ref, isInView } = useInView({ rootMargin: "-14% 0px -14% 0px", threshold: 0.1 });
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
   return (
     <section
       className="relative border-t border-white/10 py-24 md:py-32 overflow-hidden bg-[#050505]"
       id="problema"
-      ref={ref}
     >
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes orbitfire-scanner-sweep {
@@ -334,7 +333,10 @@ export function ProblemSection() {
 
       {/* ── Conteúdo ── */}
       <Container className="relative z-10">
-        <div className={`grid gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center transition-all duration-1000 ${isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+        <div
+          ref={ref as RefObject<HTMLDivElement>}
+          className={`grid gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center transition-all duration-1000 ${isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+        >
           <div className="pt-8">
             <SectionHeading
               eyebrow="Problema"

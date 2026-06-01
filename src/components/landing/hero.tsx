@@ -1,8 +1,12 @@
+"use client";
+
 import { Database, Flame, Satellite } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { DashboardPreview } from "@/components/landing/dashboard-preview";
 import { DashboardTransitionLink } from "@/components/transitions/dashboard-transition-link";
 import { Badge } from "@/components/ui/badge";
+import { useInView } from "@/hooks/use-in-view";
+import type { RefObject } from "react";
 
 const supportBadges = [
   {
@@ -20,10 +24,28 @@ const supportBadges = [
 ];
 
 export function Hero() {
+  const { ref: heroContentRef, isInView: heroContentInView } = useInView({
+    rootMargin: "-42% 0px -4% 0px",
+    threshold: 0.01,
+  });
+  const { ref: heroPreviewRef, isInView: heroPreviewInView } = useInView({
+    rootMargin: "-42% 0px -4% 0px",
+    threshold: 0.01,
+  });
+  const { ref: heroFooterRef, isInView: heroFooterInView } = useInView({
+    rootMargin: "-48% 0px -4% 0px",
+    threshold: 0.01,
+  });
+
   return (
     <section className="relative overflow-hidden">
       <Container className="grid min-h-[calc(100svh-28px)] items-center gap-12 pb-10 pt-20 md:pt-24 lg:grid-cols-[1.02fr_0.98fr] lg:pb-14">
-        <div className="relative z-10 animate-orbitfire-fade-up">
+        <div
+          ref={heroContentRef as RefObject<HTMLDivElement>}
+          className={`relative z-10 animate-orbitfire-fade-up transition-all duration-1000 ${
+            heroContentInView ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-8"
+          }`}
+        >
           <Badge className="shadow-[0_0_28px_rgba(249,115,22,0.16)]">
             <span className="h-2 w-2 rounded-full bg-orange-400 shadow-[0_0_14px_rgba(249,115,22,0.9)]" />
             OrbitFire
@@ -62,13 +84,23 @@ export function Hero() {
           </div>
         </div>
 
-        <div className="relative z-10 animate-orbitfire-fade-up [animation-delay:180ms]">
+        <div
+          ref={heroPreviewRef as RefObject<HTMLDivElement>}
+          className={`relative z-10 animate-orbitfire-fade-up [animation-delay:180ms] transition-all duration-1000 ${
+            heroPreviewInView ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-8"
+          }`}
+        >
           <DashboardPreview variant="hero" />
         </div>
       </Container>
 
       <Container className="pb-8">
-        <div className="grid gap-4 border-t border-white/10 pt-5 text-xs font-semibold uppercase tracking-[0.18em] text-white/36 md:grid-cols-3">
+        <div
+          ref={heroFooterRef as RefObject<HTMLDivElement>}
+          className={`grid gap-4 border-t border-white/10 pt-5 text-xs font-semibold uppercase tracking-[0.18em] text-white/36 transition-all duration-1000 md:grid-cols-3 ${
+            heroFooterInView ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6"
+          }`}
+        >
           <span>Programa Queimadas - INPE</span>
           <span className="md:text-center">FRP acumulado: 76.091,2 MW</span>
           <span className="md:text-right">Bioma mais afetado: Cerrado</span>

@@ -5,6 +5,7 @@ import { Container } from "@/components/layout/container";
 import { DashboardPreview } from "@/components/landing/dashboard-preview";
 import { SectionHeading } from "@/components/landing/section-heading";
 import { useInView } from "@/hooks/use-in-view";
+import type { RefObject } from "react";
 
 const solutionItems = [
   { icon: Map, label: "Mapa" },
@@ -14,13 +15,14 @@ const solutionItems = [
 ];
 
 export function SolutionSection() {
-  const { ref, isInView } = useInView({ threshold: 0.1 });
+  const { ref, isInView } = useInView({ rootMargin: "-14% 0px -14% 0px", threshold: 0.1 });
 
   return (
-    <section className="relative py-24 md:py-32" id="solucao" ref={ref}>
+    <section className="relative py-24 md:py-32" id="solucao">
       <div className="absolute inset-x-0 top-12 -z-0 h-96 bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,0.13),transparent_68%)]" />
       <Container className="relative z-10">
         <div
+          ref={ref as RefObject<HTMLDivElement>}
           className={`grid gap-12 transition-all duration-1000 lg:grid-cols-[0.95fr_1.05fr] lg:items-center ${
             isInView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
           }`}

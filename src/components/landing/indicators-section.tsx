@@ -5,6 +5,7 @@ import { SectionHeading } from "@/components/landing/section-heading";
 import { useInView } from "@/hooks/use-in-view";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { useState, useRef, useEffect } from "react";
+import type { RefObject } from "react";
 
 const indicators = [
   { label: "Focos detectados", value: 3141 },
@@ -15,16 +16,32 @@ const indicators = [
 ];
 
 export function IndicatorsSection() {
-  const { ref, isInView } = useInView({ threshold: 0.1 });
+  const { ref, isInView } = useInView({ rootMargin: "-14% 0px -14% 0px", threshold: 0.1 });
   const containerRef = useRef<HTMLDivElement>(null);
   const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
   const [animationCompleted, setAnimationCompleted] = useState(false);
+  const [showNumbers, setShowNumbers] = useState(false);
+  const [numberAnimationKey, setNumberAnimationKey] = useState(0);
 
   useEffect(() => {
     if (isInView) {
-      const timer = setTimeout(() => setAnimationCompleted(true), 2500);
-      return () => clearTimeout(timer);
+      const showTimer = setTimeout(() => {
+        setShowNumbers(true);
+        setNumberAnimationKey((current) => current + 1);
+      }, 0);
+      const completeTimer = setTimeout(() => setAnimationCompleted(true), 2500);
+      return () => {
+        clearTimeout(showTimer);
+        clearTimeout(completeTimer);
+      };
     }
+
+    const resetTimer = setTimeout(() => setAnimationCompleted(false), 0);
+    const hideTimer = setTimeout(() => setShowNumbers(false), 1000);
+    return () => {
+      clearTimeout(resetTimer);
+      clearTimeout(hideTimer);
+    };
   }, [isInView]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -38,7 +55,7 @@ export function IndicatorsSection() {
   };
 
   return (
-    <section className="relative py-24 md:py-32 overflow-hidden" id="indicadores" ref={ref}>
+    <section className="relative py-24 md:py-32 overflow-hidden" id="indicadores">
       {/* Fundo técnico de leitura de dados decorativo */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03]">
         <div className="absolute inset-0 [background-image:linear-gradient(rgba(255,255,255,1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,1)_1px,transparent_1px)] [background-size:60px_60px]" />
@@ -52,12 +69,13 @@ export function IndicatorsSection() {
       </div>
 
       <Container>
-        <div 
-          ref={containerRef}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          className={`relative rounded-lg border border-white/10 bg-black/50 p-5 shadow-[0_32px_120px_rgba(0,0,0,0.56)] backdrop-blur-xl md:p-8 transition-all duration-1000 ${isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-        >
+        <div ref={ref as RefObject<HTMLDivElement>}>
+          <div
+            ref={containerRef}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className={`relative rounded-lg border border-white/10 bg-black/50 p-5 shadow-[0_32px_120px_rgba(0,0,0,0.56)] backdrop-blur-xl md:p-8 transition-all duration-1000 ${isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+          >
           {/* Spotlight global para os cards */}
           <div 
             className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 hover:opacity-100"
@@ -115,8 +133,12 @@ export function IndicatorsSection() {
                   {String(index + 1).padStart(2, "0")}
                 </p>
                 <strong className={`relative z-10 mt-8 block text-4xl font-medium tracking-tight md:text-5xl transition-all duration-300 group-hover:drop-shadow-[0_0_16px_rgba(249,115,22,0.4)] ${indicator.isHighRisk ? 'text-orange-300' : 'text-white'} ${indicator.suffix ? 'group-hover:text-amber-200' : ''}`}>
-                  {isInView ? (
-                    <AnimatedNumber value={indicator.value} formatOptions={{ minimumFractionDigits: indicator.value % 1 !== 0 ? 1 : 0 }} />
+                  {showNumbers ? (
+                    <AnimatedNumber
+                      key={`${numberAnimationKey}-${indicator.label}`}
+                      value={indicator.value}
+                      formatOptions={{ minimumFractionDigits: indicator.value % 1 !== 0 ? 1 : 0 }}
+                    />
                   ) : (
                     "0"
                   )}
@@ -136,6 +158,7 @@ export function IndicatorsSection() {
             <p className="text-[11px] leading-relaxed text-white/30 max-w-2xl text-right">
               * Faixa visual criada pelo OrbitFire para registros com risco_fogo superior a 0,75, com base no campo disponibilizado no conjunto de dados.
             </p>
+          </div>
           </div>
         </div>
       </Container>
